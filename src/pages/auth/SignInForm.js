@@ -1,14 +1,38 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, {useState} from "react";
+import { Link, useHistory } from "react-router-dom";
 
 import { Form, Button, Image, Col, Row, Container, Alert } from "react-bootstrap";
+import axios from "axios";
 
 import styles from "../../styles/SignInUpForm.module.css";
 import btnStyles from "../../styles/Button.module.css";
 import appStyles from "../../App.module.css";
 
 function SignInForm() {
-//   Add your component logic here
+    const [signInData, setSignInData] = useState({
+        username: '',
+        password: '',
+    })
+    const { username, password } = signInData;
+    const history = useHistory();
+    const [errors, setErrors] = useState({});
+
+    const handleChange = (event) => {
+        setSignInData({
+            ...signInData,
+            [event.target.name]: event.target.value,
+        })
+    }
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        try {
+            await axios.post('/dj-rest-auth/login/', signInData);
+            history.push('/');
+        } catch(err){
+            setErrors(err.response?.data)
+        }
+    }
 
   return (
     <Row className={styles.Row}>
@@ -16,15 +40,20 @@ function SignInForm() {
         <Container className={`${appStyles.Content} p-4 `}>
           <h1 className={styles.Header}>sign in</h1>
           
-          <Form>
+          <Form onSubmit={handleSubmit}>
             <Form.Group controlId="username">
                 <Form.Label className="d-none">Enter Username</Form.Label>
                 <Form.Control 
                     className={styles.Input}
                     type="text" 
                     placeholder="Enter Username"
-                    name="username" />
+                    name="username"
+                    value={username}
+                    onChange={handleChange} />
             </Form.Group>
+            {errors.username?.map((message,idx) => 
+                  <Alert variant="warning" key={idx}>{message}</Alert>
+                )}
 
             <Form.Group controlId="password">
                 <Form.Label className="d-none">Password</Form.Label>
@@ -32,14 +61,22 @@ function SignInForm() {
                     className={styles.Input}
                     type="password" 
                     placeholder="Password"
-                    name="password" />
+                    name="password"
+                    value={password}
+                    onChange={handleChange} />
             </Form.Group>
+            {errors.password?.map((message,idx) => 
+                  <Alert variant="warning" key={idx}>{message}</Alert>
+                )}
 
             <Button 
                 className={`${btnStyles.Button} ${btnStyles.Wide} ${btnStyles.Bright}`}
                 type="submit">
                 Sign In
             </Button>
+            {errors.non_field_errors?.map((message,idx) => 
+                  <Alert className="mt-3" variant="warning" key={idx}>{message}</Alert>
+                )}
             </Form>
 
         </Container>
